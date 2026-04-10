@@ -6,8 +6,17 @@ import {
   Plus,
   RefreshCw,
   X,
+  Zap,
 } from 'lucide-react'
-import { accessRoleLabel, type AccessRoleId } from './accessRoles'
+import { accessRoleLabel, ACCESS_ROLE_IDS, type AccessRoleId } from './accessRoles'
+
+const AVAILABLE_ADDITIONAL_PERMISSIONS = [
+  { id: 'view-financials', label: 'View financial data' },
+  { id: 'approve-timesheets', label: 'Approve timesheets' },
+  { id: 'export-reports', label: 'Export reports' },
+  { id: 'manage-billing', label: 'Manage billing' },
+  { id: 'view-salaries', label: 'View salaries' },
+]
 
 const CATEGORY_TABS = [
   { id: 'employees', label: 'Employees' },
@@ -42,6 +51,8 @@ export interface PeopleRow {
   projectCanView: string[]
   /** Projects this person can edit — Access tab. */
   projectCanEdit: string[]
+  /** Bespoke permissions granted to this individual beyond their role. */
+  additionalPermissions: string[]
 }
 
 const PERSON_PANEL_TABS = [
@@ -72,6 +83,7 @@ const SAMPLE_PEOPLE: PeopleRow[] = [
     accessRoleId: 'resource-planner',
     projectCanView: DEFAULT_PROJECT_VIEW,
     projectCanEdit: DEFAULT_PROJECT_EDIT,
+    additionalPermissions: ['approve-timesheets', 'export-reports'],
   },
   {
     id: '2',
@@ -85,6 +97,7 @@ const SAMPLE_PEOPLE: PeopleRow[] = [
     accessRoleId: 'project-manager',
     projectCanView: DEFAULT_PROJECT_VIEW,
     projectCanEdit: DEFAULT_PROJECT_EDIT,
+    additionalPermissions: ['view-financials', 'view-salaries'],
   },
   {
     id: '3',
@@ -98,6 +111,7 @@ const SAMPLE_PEOPLE: PeopleRow[] = [
     accessRoleId: 'admin',
     projectCanView: DEFAULT_PROJECT_VIEW,
     projectCanEdit: DEFAULT_PROJECT_EDIT,
+    additionalPermissions: [],
   },
   {
     id: '4',
@@ -111,6 +125,7 @@ const SAMPLE_PEOPLE: PeopleRow[] = [
     accessRoleId: 'admin',
     projectCanView: DEFAULT_PROJECT_VIEW,
     projectCanEdit: DEFAULT_PROJECT_EDIT,
+    additionalPermissions: [],
   },
   {
     id: '5',
@@ -124,6 +139,7 @@ const SAMPLE_PEOPLE: PeopleRow[] = [
     accessRoleId: 'resource-planner',
     projectCanView: DEFAULT_PROJECT_VIEW,
     projectCanEdit: DEFAULT_PROJECT_EDIT,
+    additionalPermissions: [],
   },
   {
     id: '6',
@@ -137,6 +153,7 @@ const SAMPLE_PEOPLE: PeopleRow[] = [
     accessRoleId: 'project-manager',
     projectCanView: DEFAULT_PROJECT_VIEW,
     projectCanEdit: DEFAULT_PROJECT_EDIT,
+    additionalPermissions: ['manage-billing'],
   },
   {
     id: '7',
@@ -150,6 +167,7 @@ const SAMPLE_PEOPLE: PeopleRow[] = [
     accessRoleId: 'admin',
     projectCanView: DEFAULT_PROJECT_VIEW,
     projectCanEdit: DEFAULT_PROJECT_EDIT,
+    additionalPermissions: [],
   },
   {
     id: '8',
@@ -163,6 +181,7 @@ const SAMPLE_PEOPLE: PeopleRow[] = [
     accessRoleId: 'member',
     projectCanView: DEFAULT_PROJECT_VIEW,
     projectCanEdit: DEFAULT_PROJECT_EDIT,
+    additionalPermissions: [],
   },
 ]
 
@@ -175,10 +194,30 @@ export function DataHubPeoplePage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilterId>('active')
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null)
   const [personPanelTab, setPersonPanelTab] = useState<PersonPanelTabId>('access')
+  const [people, setPeople] = useState<PeopleRow[]>(SAMPLE_PEOPLE)
 
   const selectedPerson = selectedPersonId
-    ? SAMPLE_PEOPLE.find((p) => p.id === selectedPersonId) ?? null
+    ? people.find((p) => p.id === selectedPersonId) ?? null
     : null
+
+  function updatePersonRole(id: string, roleId: AccessRoleId) {
+    setPeople((prev) => prev.map((p) => (p.id === id ? { ...p, accessRoleId: roleId } : p)))
+  }
+
+  function toggleAdditionalPermission(id: string, permId: string) {
+    setPeople((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p
+        const has = p.additionalPermissions.includes(permId)
+        return {
+          ...p,
+          additionalPermissions: has
+            ? p.additionalPermissions.filter((x) => x !== permId)
+            : [...p.additionalPermissions, permId],
+        }
+      }),
+    )
+  }
 
   function openPerson(id: string) {
     setSelectedPersonId(id)
@@ -307,7 +346,7 @@ export function DataHubPeoplePage() {
             </tr>
           </thead>
           <tbody>
-            {SAMPLE_PEOPLE.map((row) => (
+            {people.map((row) => (
               <tr
                 key={row.id}
                 className={`dh-people__row${selectedPersonId === row.id ? ' dh-people__row--selected' : ''}`}
@@ -326,7 +365,16 @@ export function DataHubPeoplePage() {
                 </td>
                 <td className="dh-people__td">{row.role}</td>
                 <td className="dh-people__td dh-people__td--access">
-                  {accessRoleLabel(row.accessRoleId)}
+                  <span className="dh-people__access-cell">
+                    {accessRoleLabel(row.accessRoleId)}
+                    {row.additionalPermissions.length > 0 && (
+                      <Zap
+                        size={12}
+                        className="dh-people__bespoke-icon"
+                        aria-label="Has additional permissions"
+                      />
+                    )}
+                  </span>
                 </td>
                 <td className="dh-people__td">{row.department}</td>
                 <td className="dh-people__td">{row.deliveryTeam}</td>
@@ -408,9 +456,57 @@ export function DataHubPeoplePage() {
                   <p id="person-access-role-heading" className="person-panel__card-label">
                     Access role
                   </p>
-                  <p className="person-panel__card-value">
-                    {accessRoleLabel(selectedPerson.accessRoleId)}
+                  <div className="person-panel__role-row">
+                    <select
+                      className="person-panel__role-select"
+                      value={selectedPerson.accessRoleId}
+                      onChange={(e) =>
+                        updatePersonRole(selectedPerson.id, e.target.value as AccessRoleId)
+                      }
+                      aria-label="Access role"
+                    >
+                      {ACCESS_ROLE_IDS.map((roleId) => (
+                        <option key={roleId} value={roleId}>
+                          {accessRoleLabel(roleId)}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedPerson.additionalPermissions.length > 0 && (
+                      <span
+                        className="person-panel__bespoke-badge"
+                        title="This person has additional permissions beyond their role"
+                      >
+                        <Zap size={13} aria-hidden />
+                        Additional permissions
+                      </span>
+                    )}
+                  </div>
+                </section>
+
+                <section className="person-panel__card" aria-labelledby="person-addl-perms-heading">
+                  <p id="person-addl-perms-heading" className="person-panel__card-label">
+                    Additional permissions
                   </p>
+                  <ul className="person-panel__perm-list">
+                    {AVAILABLE_ADDITIONAL_PERMISSIONS.map((perm) => {
+                      const checked = selectedPerson.additionalPermissions.includes(perm.id)
+                      return (
+                        <li key={perm.id} className="person-panel__perm-item">
+                          <label className="person-panel__perm-label">
+                            <input
+                              type="checkbox"
+                              className="person-panel__perm-checkbox"
+                              checked={checked}
+                              onChange={() =>
+                                toggleAdditionalPermission(selectedPerson.id, perm.id)
+                              }
+                            />
+                            {perm.label}
+                          </label>
+                        </li>
+                      )
+                    })}
+                  </ul>
                 </section>
 
                 <section className="person-panel__card person-panel__card--access" aria-labelledby="project-access-heading">

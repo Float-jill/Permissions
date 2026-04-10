@@ -1602,6 +1602,112 @@
   color: #7dd3fc;
 }
 
+/* ── Access role editable row ─────────────────────────────────────────────── */
+
+.person-panel__role-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.person-panel__role-select {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--border-panel);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238e8e8e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+  transition: border-color 0.15s ease;
+}
+
+.person-panel__role-select:hover {
+  border-color: #3f3f3f;
+}
+
+.person-panel__role-select:focus {
+  outline: none;
+  border-color: var(--focus-ring);
+}
+
+.person-panel__role-select option {
+  background: #1a1a1a;
+  color: var(--text-primary);
+}
+
+/* Bespoke badge shown when person has additional permissions */
+
+.person-panel__bespoke-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: rgba(250, 204, 21, 0.12);
+  border: 1px solid rgba(250, 204, 21, 0.3);
+  color: #facc15;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: default;
+}
+
+/* Additional permissions checklist */
+
+.person-panel__perm-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.person-panel__perm-item {
+  display: flex;
+}
+
+.person-panel__perm-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+  line-height: 1.4;
+}
+
+.person-panel__perm-checkbox {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  accent-color: #22d3ee;
+  cursor: pointer;
+}
+
+/* Bespoke icon in the people table */
+
+.dh-people__access-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dh-people__bespoke-icon {
+  color: #facc15;
+  flex-shrink: 0;
+}
+
 /* Covers the full viewport, including the app rail (sits above it in the stacking order). */
 .settings-fullpage {
   position: fixed;
